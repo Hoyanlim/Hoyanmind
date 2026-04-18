@@ -1,4 +1,6 @@
 from transformers import PretrainedConfig
+import torch  # noqa: E402
+import torch.nn as nn
 
 # huggingface的transformers中的预训练模型配置类，包含了模型的各种超参数和配置选项，可以通过继承该类来定义自己的模型配置HoyanmindConfig。
 class HoyanmindConfig(PretrainedConfig):
@@ -70,3 +72,18 @@ class HoyanmindConfig(PretrainedConfig):
             if self.inference_rope_scaling
             else None
         )
+
+#继承nn.Module
+class RMSnorm(torch.nn.Module):
+    # 初始化
+    def __init__(self, dim: int, eps: float = 1e-5):
+        super().__init__()  # 调用父类nn.Module的构造函数
+        self.eps = eps
+        self.weight = torch.nn.Parameter(torch.ones(dim))
+# _norm
+    def _norm(self, x):
+        return torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps) * x
+
+#forward
+    def forward(self, x):
+        return self._norm(x.float()) * self.weight.type_as(x)
